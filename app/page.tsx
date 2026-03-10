@@ -103,7 +103,7 @@ function StatCard({
 export default function Page() {
   const [buyer, setBuyer] = useState("Comprador Tamarindo");
   const [supplier, setSupplier] = useState("");
-  const [boxes, setBoxes] = useState<number>(1);
+  const [boxes, setBoxes] = useState("1");
   const [grossWeight, setGrossWeight] = useState<string>("");
   const [records, setRecords] = useState<RecordItem[]>([]);
   const [query, setQuery] = useState("");
@@ -126,7 +126,15 @@ export default function Page() {
   }, [records]);
 
   const boxTare = useMemo(() => Number(boxes || 0) * 1, [boxes]);
+    const incrementBoxes = () => {
+      const current = Number(boxes || 0);
+      setBoxes(String(Math.max(1, current + 1)));
+    };
 
+    const decrementBoxes = () => {
+      const current = Number(boxes || 0);
+      setBoxes(String(Math.max(1, current - 1)));
+    };
   const netWeight = useMemo(() => {
     const gross = Number(grossWeight || 0);
     const net = gross - boxTare;
@@ -173,7 +181,7 @@ export default function Page() {
   options?: { openPreview?: boolean; printAfterSave?: boolean }
 ) => {
   const gross = Number(grossWeight);
-  const qtyBoxes = Number(boxes);
+  const qtyBoxes = Number(boxes || 0);
 
   if (!buyer.trim()) {
     alert("Ingresa el nombre del comprador.");
@@ -224,7 +232,7 @@ export default function Page() {
   setRecords((prev) => [record, ...prev]);
   setLastSavedFolio(record.folio);
   setGrossWeight("");
-  setBoxes(1);
+  setBoxes("1");
 
   if (options?.openPreview) {
     setSelectedRecord(record);
@@ -557,20 +565,66 @@ export default function Page() {
                   Este proveedor se conservará para todas las pesadas hasta que lo cambies.
                 </p>
               </div>
+      
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-slate-700">
+              Número de cajas
+            </label>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
-                    Número de cajas
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={boxes}
-                    onChange={(e) => setBoxes(Number(e.target.value))}
-                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-slate-500"
-                  />
-                </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="h-11 w-11 shrink-0 rounded-xl border border-slate-300 bg-white p-0 text-lg font-semibold text-slate-800 hover:bg-slate-50"
+                onClick={decrementBoxes}
+              >
+                -
+              </button>
+
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={boxes}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  const clean = e.target.value.replace(/\D/g, "");
+                  setBoxes(clean);
+                }}
+                placeholder="1"
+                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-center text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-slate-500"
+              />
+
+              <button
+                type="button"
+                className="h-11 w-11 shrink-0 rounded-xl border border-slate-300 bg-white p-0 text-lg font-semibold text-slate-800 hover:bg-slate-50"
+                onClick={incrementBoxes}
+              >
+                +
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500">
+              Puedes escribir la cantidad o usar + y -.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-slate-700">
+              Peso bruto (kg)
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={grossWeight}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setGrossWeight(e.target.value)
+              }
+              placeholder="Ej. 38.50"
+              className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-slate-500"
+            />
+          </div>
+        </div>
 
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-700">
@@ -658,8 +712,9 @@ export default function Page() {
               <p className="text-xs leading-5 text-slate-500">
                 El proveedor permanece fijo hasta que lo cambies. El sistema acumula automáticamente el total del día.
               </p>
+              </section>
             </div>
-          </section>
+          
 
           <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -783,7 +838,7 @@ export default function Page() {
             </div>
           </section>
         </div>
-      </div>
+      
 
       {selectedRecord && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
